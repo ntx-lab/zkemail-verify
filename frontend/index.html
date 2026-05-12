@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NTHU MBTI Match — Identity Verification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <header>
+    <div class="logo">
+      <div class="logo-hex">M</div>
+      <div class="logo-text">
+        <span class="logo-title">MBTI Match</span>
+        <span class="logo-sub">NTHU · 2025</span>
+      </div>
+    </div>
+    <div class="header-tag">Zero-Knowledge Verified</div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════
+       PHASE 1 — Request verification email
+  ════════════════════════════════════════════ -->
+  <main id="phase1">
+    <div class="phase-wrap">
+      <div class="phase-label">Step 01 of 03</div>
+      <h1>Verify your<br/><span class="accent">NTHU identity</span></h1>
+      <p class="lead">
+        Enter your NTHU email. We'll send you a verification message —
+        no password, no account, just cryptographic proof.
+      </p>
+
+      <div class="input-group">
+        <div class="input-wrap">
+          <input
+            type="email"
+            id="emailInput"
+            placeholder="your-id@nthu.edu.tw"
+            autocomplete="email"
+            spellcheck="false"
+          />
+          <div class="input-suffix">@nthu.edu.tw</div>
+        </div>
+        <div class="input-hint" id="emailHint"></div>
+      </div>
+
+      <button class="btn btn-primary" id="sendBtn">
+        <span class="btn-label">Send Verification Email</span>
+        <span class="btn-arrow">→</span>
+      </button>
+
+      <div class="sending-state hidden" id="sendingState">
+        <div class="mini-spinner"></div>
+        <span>Sending email…</span>
+      </div>
+
+      <div class="error-inline hidden" id="sendError"></div>
+
+      <div class="how-it-works">
+        <div class="hiw-title">How it works</div>
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="hiw-num">1</div>
+            <div>We email you a signed verification message</div>
+          </div>
+          <div class="hiw-step">
+            <div class="hiw-num">2</div>
+            <div>You download it as <code>.eml</code> from your inbox</div>
+          </div>
+          <div class="hiw-step">
+            <div class="hiw-num">3</div>
+            <div>Generate a ZK proof — your address stays private</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+       PHASE 2 — Download & Upload .eml
+  ════════════════════════════════════════════ -->
+  <main id="phase2" class="hidden">
+    <div class="phase-wrap">
+      <div class="phase-label">Step 02 of 03</div>
+      <h1>Check your<br/><span class="accent">NTHU inbox</span></h1>
+      <p class="lead">
+        We sent a verification email to <strong id="sentToAddr"></strong>.
+        Download it as a <code>.eml</code> file, then upload it below.
+      </p>
+
+      <div class="instruction-cards">
+        <div class="instr-card">
+          <div class="instr-num">A</div>
+          <div class="instr-body">
+            <div class="instr-title">Gmail / Google Workspace</div>
+            <div class="instr-steps">
+              Open the email → click <kbd>⋮</kbd> (three dots) → <kbd>Download message</kbd>
+            </div>
+          </div>
+        </div>
+        <div class="instr-card">
+          <div class="instr-num">B</div>
+          <div class="instr-body">
+            <div class="instr-title">Outlook / OWA Webmail</div>
+            <div class="instr-steps">
+              Open the email → click <kbd>···</kbd> → <kbd>Download</kbd> or <kbd>Save as .eml</kbd>
+            </div>
+          </div>
+        </div>
+        <div class="instr-card warn-card">
+          <div class="instr-num">!</div>
+          <div class="instr-body">
+            <div class="instr-title">Important</div>
+            <div class="instr-steps">
+              Download from your inbox directly. Do <strong>not</strong> forward — forwarding breaks the cryptographic signature.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="emlFile" accept=".eml" hidden />
+        <div class="upload-icon">⬆</div>
+        <div class="upload-main">Drop <code>.eml</code> file here</div>
+        <div class="upload-sub">or click to browse your files</div>
+      </div>
+
+      <div class="file-ready hidden" id="fileReady">
+        <span class="file-check">✓</span>
+        <span id="fileReadyName"></span>
+      </div>
+
+      <button class="btn btn-primary hidden" id="proveBtn">
+        <span class="btn-label">Generate ZK Proof</span>
+        <span class="btn-arrow">→</span>
+      </button>
+
+      <button class="btn btn-ghost" id="backBtn">← Send to a different address</button>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+       PHASE 3 — Proof result
+  ════════════════════════════════════════════ -->
+  <main id="phase3" class="hidden">
+    <div class="phase-wrap">
+
+      <!-- Generating state -->
+      <div id="generatingState">
+        <div class="phase-label">Step 03 of 03</div>
+        <h1>Generating<br/><span class="accent">your proof</span></h1>
+        <p class="lead">This takes 15–60 seconds. Do not close this tab.</p>
+        <div class="proof-progress">
+          <div class="proof-spinner"></div>
+          <div class="proof-status" id="proofStatus">Initializing ZK Email SDK…</div>
+        </div>
+        <div class="proof-steps">
+          <div class="proof-step" id="pstep1">◯ Load blueprint from registry</div>
+          <div class="proof-step" id="pstep2">◯ Validate email signature</div>
+          <div class="proof-step" id="pstep3">◯ Generate zero-knowledge proof</div>
+          <div class="proof-step" id="pstep4">◯ Verify proof</div>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div id="proofError" class="hidden">
+        <div class="phase-label">Error</div>
+        <h1>Proof<br/><span class="accent-red">failed</span></h1>
+        <div class="error-box" id="proofErrorMsg"></div>
+        <button class="btn btn-ghost" id="proofRetryBtn">← Try again</button>
+      </div>
+
+      <!-- Success state -->
+      <div id="proofSuccess" class="hidden">
+        <div class="success-badge">✓ Verified</div>
+        <h1>Identity<br/><span class="accent">confirmed</span></h1>
+        <p class="lead">Your NTHU identity is cryptographically proven. Copy the token below and paste it into the registration form.</p>
+
+        <div class="token-block">
+          <div class="token-label">ZK Proof Token</div>
+          <div class="token-content" id="tokenContent"></div>
+          <button class="copy-btn" id="copyBtn">⎘ Copy token</button>
+        </div>
+
+        <a class="btn btn-primary" id="retoolBtn" href="#" target="_blank">
+          <span class="btn-label">Open Registration Form</span>
+          <span class="btn-arrow">→</span>
+        </a>
+
+        <div class="success-note">
+          This token is unique to you. Do not share it — it grants registration access.
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <span>NTHU MBTI Matching · 2025</span>
+    <span>Powered by <a href="https://zk.email" target="_blank">ZK Email</a> · Privacy-preserving by design</span>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
